@@ -1,0 +1,12 @@
+#spring:
+##  security:
+##    user:
+##      name: admin
+##      password: 123
+##      roles: ['admin']
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    username: root
+    password: root
+    url: jdbc:mysql:///security?serverTimezone=Asia/Shanghai
