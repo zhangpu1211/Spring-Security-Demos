@@ -3,11 +3,13 @@ package org.zp.secret.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.zp.secret.service.UserService;
 
 @Configuration
@@ -19,6 +21,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     MyAuthFailHandler myAuthFailHandler;
     @Autowired
     UserService userService;
+    @Autowired
+    MyFilter myFilter;
+    @Autowired
+    MyAccessDecisionManager myAccessDecisionManager;
     @Bean
     PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
@@ -34,9 +40,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .antMatchers("/admin/**").hasRole("admin")
-                .antMatchers("/user/**").hasAnyRole("admin","user")
-                .anyRequest().authenticated()  //其他路径认证之后就可以访问
+//                .antMatchers("/admin/**").hasRole("admin")
+//                .antMatchers("/user/**").hasAnyRole("admin","user")
+//                .anyRequest().authenticated()  //其他路径认证之后就可以访问
+                //and之前为新增的基于数据库处理
+                .withObjectPostProcessor(new ObjectPostProcessor<FilterSecurityInterceptor>() {
+                    @Override
+                    public <O extends FilterSecurityInterceptor> O postProcess(O o) {
+                        o.setSecurityMetadataSource(myFilter);
+                        o.setAccessDecisionManager(myAccessDecisionManager);
+                        return o;
+                    }
+                })
                 .and()
                 .formLogin()
                 .loginProcessingUrl("/doLogin")  //处理登录请求的地址
